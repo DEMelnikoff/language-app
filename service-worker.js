@@ -1,13 +1,13 @@
 const CACHE_NAME = 'streak-breaker-cache-v1';
 const urlsToCache = [
   '/',
-  '/index.html',
-  '/jsFiles/jspsych.js',
-  '/css/jspsych.css',
-  '/jsFiles/plugin-html-button-response.js',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  'index.html',
+  './jsFiles/jspsych.js',
+  './css/jspsych.css',
+  './jsFiles/plugin-html-button-response.js',
+  'manifest.json',
+  'icon-192.png',
+  'icon-512.png'
 ];
 
 self.addEventListener('install', event => {
