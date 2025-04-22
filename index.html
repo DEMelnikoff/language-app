@@ -6,109 +6,54 @@
   <meta name="theme-color" content="#3367D6" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="mobile-web-app-capable" content="yes">
   <link rel="manifest" href="manifest.json" />
   <title>Streak Breaker</title>
   <link href="css/jspsych.css" rel="stylesheet" />
   <style>
     body { font-family: sans-serif; margin: 0; padding: 0; }
     #jspsych-target { margin: auto; max-width: 600px; padding: 20px; }
-    #install-prompt {
+    #install-gate {
       display: none;
-      position: fixed;
-      bottom: 20px;
-      left: 0;
-      right: 0;
-      margin: auto;
-      width: fit-content;
-      background: #3367D6;
-      color: white;
-      padding: 10px 20px;
+      max-width: 600px;
+      margin: 60px auto;
+      padding: 20px;
+      font-size: 18px;
+      background-color: #f5f5f5;
       border-radius: 8px;
-      font-size: 16px;
-      z-index: 1000;
+      text-align: center;
+    }
+    #install-gate h2 {
+      color: #3367D6;
     }
   </style>
 </head>
 <body>
-  <div id="jspsych-target"></div>
-  <button id="install-prompt">Add to Home Screen</button>
+  <div id="install-gate">
+    <h2>Install Streak Breaker</h2>
+    <p>To play this game, please install it to your home screen:</p>
+    <p><strong>iOS:</strong> Tap the <span style="font-size: 1.2em;">↑</span> and choose <em>"Add to Home Screen"</em>.</p>
+    <p><strong>Android:</strong> Use the browser menu and choose <em>"Install App"</em>.</p>
+  </div>
 
+  <div id="jspsych-target" style="display:none;"></div>
+
+  <!-- Load jsPsych and plugins -->
+  <script src="./jsFiles/jspsych.js"></script>
+  <script src="./jsFiles/plugin-html-button-response.js"></script>
+  <script src="./register-sw.js"></script>
+
+  <!-- Install check and experiment loader -->
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log("Service Worker registered"));
+    const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+    if (!isInStandaloneMode) {
+      document.getElementById('install-gate').style.display = 'block';
+    } else {
+      document.getElementById('jspsych-target').style.display = 'block';
+      const script = document.createElement('script');
+      script.src = './experiment.js';
+      document.body.appendChild(script);
     }
-
-    // Custom iOS-style install hint for Safari
-    window.addEventListener('load', function () {
-      const isIOS = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
-      const isInStandaloneMode = ('standalone' in window.navigator) && window.navigator.standalone;
-
-      if (isIOS && !isInStandaloneMode) {
-        const installPrompt = document.getElementById('install-prompt');
-        installPrompt.style.display = 'block';
-        installPrompt.innerText = 'To install this app, tap \u2191 and choose \"Add to Home Screen\"';
-      }
-    });
-  </script>
-
-
-  <!-- Load UMD jsPsych core and plugin -->
-  <script src="jsFiles/jspsych.js"></script>
-  <script src="jsFiles/plugin-html-button-response.js"></script>
-
-  <script>
-    const jsPsych = initJsPsych({
-      display_element: 'jspsych-target',
-      on_finish: () => {
-        let best = localStorage.getItem("bestBreak") || "—";
-        let streak = localStorage.getItem("streak") || 0;
-        jsPsych.data.displayData("json");
-        alert(`Best streak break: ${best}\nCurrent streak: ${streak}`);
-      }
-    });
-
-    const words = ["zelmor", "valmik", "marnel"];
-    const meanings = ["river", "banana", "teacher", "engine", "apple", "mirror", "snow", "book"];
-    const mappings = { zelmor: "engine", valmik: "banana", marnel: "teacher" };
-
-    const getTrial = (word) => {
-      let correct = mappings[word];
-      let distractors = meanings.filter(m => m !== correct);
-      let choices = [...distractors.sort(() => 0.5 - Math.random()).slice(0, 7), correct];
-      choices = choices.sort(() => 0.5 - Math.random());
-      return {
-        type: jsPsychHtmlButtonResponse,
-        stimulus: `<strong>What does <em>${word}</em> mean?</strong>`,
-        choices: choices,
-        data: { word: word, correct: correct },
-        on_finish: (data) => {
-          data.response_label = choices[data.response];
-          data.correct_response = data.correct;
-          data.correct = data.response_label === data.correct;
-
-          let streak = parseInt(localStorage.getItem("streak")) || 0;
-          let best = parseInt(localStorage.getItem("bestBreak")) || Infinity;
-
-          if (data.correct) {
-            if (streak < best) localStorage.setItem("bestBreak", streak);
-            localStorage.setItem("streak", 0);
-          } else {
-            localStorage.setItem("streak", streak + 1);
-          }
-        }
-      };
-    };
-
-    const timeline = [];
-    let trials = 10;
-    for (let i = 0; i < trials; i++) {
-      const word = words[Math.floor(Math.random() * words.length)];
-      timeline.push(getTrial(word));
-    }
-
-    jsPsych.run(timeline);
   </script>
 </body>
 </html>
